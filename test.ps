@@ -1,0 +1,28 @@
+%!
+% Letter = 8.5 x 11 in² = 612 x 792 pt²
+/page_width 612 def
+/page_height 792 def
+/top_margin 720 def
+/bottom_margin 72 def
+/left_margin 72 def
+/right_margin 540 def
+
+/body_size 12 def
+/head_size 13 def
+
+/line_space 15 def
+
+/body_pad 18 def
+/head_pad 39 def
+
+% newline or padding
+/next_line { left_margin exch currentpoint exch pop exch sub moveto } bind def
+
+% kerning table
+/kerns <<
+	[65 89] 0
+	[84 121] 0
+>> def
+
+/Roboto-Regular body_size selectfont
+
