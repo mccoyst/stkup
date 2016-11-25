@@ -6,16 +6,16 @@ import (
 	"io"
 	"os"
 	"text/template"
-//	"unicode/utf8"
+	//	"unicode/utf8"
 )
 
 type layout struct {
-	PageWidth, PageHeight float64
+	PageWidth, PageHeight            float64
 	VerticalMargin, HorizontalMargin float64
 
-	FontName string
+	FontName          string
 	BodySize, BodyPad float64
-	LineSpace float64
+	LineSpace         float64
 
 	HeadSize, HeadPad float64
 }
