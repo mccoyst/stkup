@@ -10,14 +10,11 @@ import (
 	"text/template"
 //	"unicode/utf8"
 
-	"golang.org/x/image/font"
 	"github.com/golang/freetype/truetype"
 )
 
 type layout struct {
 	font *truetype.Font
-	face font.Face
-	Kerns map[rune]map[rune]float64
 
 	PageWidth, PageHeight float64
 	VerticalMargin, HorizontalMargin float64
@@ -40,9 +37,6 @@ func NewLayout(fontPath string) (*layout, error) {
 		return nil, err
 	}
 
-	l.face = truetype.NewFace(l.font, &truetype.Options{})
-
-	l.Kerns = make(map[rune]map[rune]float64)
 	l.PageWidth = 612
 	l.PageHeight = 792
 	l.VerticalMargin = 72
@@ -76,23 +70,6 @@ func (l *layout) TopMargin() float64 {
 	return l.PageHeight - l.VerticalMargin
 }
 
-func (l *layout) Kern(a, b rune) float64 {
-	i := l.face.Kern(a, b)
-//	if i == 0 {
-//		return 0
-//	}
-
-	// 26.6 fixed-point to float:
-	m := int32(1 << 6)
-	f := float64(i >> 6) + float64((int32(i) & (m - 1)) / m)
-
-	if l.Kerns[a] == nil {
-		l.Kerns[a] = make(map[rune]float64)
-	}
-	l.Kerns[a][b] = f
-	return f
-}
-
 func (l *layout) Print(w io.Writer) error {
 	t := template.Must(template.New("preamble").Parse(layoutPreamble))
 	return t.Execute(w, l)
@@ -103,9 +80,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	l.Kern('T', 'y')
-	l.Kern('A', 'Y')
 
 	err = l.Print(os.Stdout)
 	if err != nil {
@@ -132,15 +106,6 @@ var layoutPreamble = `%!
 
 % newline or padding
 /next_line { left_margin exch currentpoint exch pop exch sub moveto } bind def
-
-% kerning table
-/kerns <<
-{{- range $a, $k := .Kerns -}}
-{{- range $b, $v := $k}}
-	[{{$a}} {{$b}}] {{$v}}
-{{- end}}
-{{- end}}
->> def
 
 /{{.FontName}} body_size selectfont
 
