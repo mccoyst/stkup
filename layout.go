@@ -3,40 +3,26 @@
 package main
 
 import (
-	"os"
-
 	"io"
-	"io/ioutil"
+	"os"
 	"text/template"
 //	"unicode/utf8"
-
-	"github.com/golang/freetype/truetype"
 )
 
 type layout struct {
-	font *truetype.Font
-
 	PageWidth, PageHeight float64
 	VerticalMargin, HorizontalMargin float64
 
+	FontName string
 	BodySize, BodyPad float64
 	LineSpace float64
 
 	HeadSize, HeadPad float64
 }
 
-func NewLayout(fontPath string) (*layout, error) {
-	f, err := ioutil.ReadFile(fontPath)
-	if err != nil {
-		return nil, err
-	}
-
+func NewLayout(fontName string) *layout {
 	l := new(layout)
-	l.font, err = truetype.Parse(f)
-	if err != nil {
-		return nil, err
-	}
-
+	l.FontName = fontName
 	l.PageWidth = 612
 	l.PageHeight = 792
 	l.VerticalMargin = 72
@@ -47,11 +33,7 @@ func NewLayout(fontPath string) (*layout, error) {
 	l.HeadSize = 13
 	l.HeadPad = l.HeadSize * 3
 
-	return l, nil
-}
-
-func (l *layout) FontName() string {
-	return l.font.Name(truetype.NameIDPostscriptName)
+	return l
 }
 
 func (l *layout) LeftMargin() float64 {
@@ -76,12 +58,9 @@ func (l *layout) Print(w io.Writer) error {
 }
 
 func main() {
-	l, err := NewLayout("/Users/smccoy/Library/Fonts/Roboto-Regular.ttf")
-	if err != nil {
-		panic(err)
-	}
+	l := NewLayout("GoRegular")
 
-	err = l.Print(os.Stdout)
+	err := l.Print(os.Stdout)
 	if err != nil {
 		panic(err)
 	}
