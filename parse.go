@@ -39,11 +39,8 @@ func (l *lexer) Next() (token, error) {
 	for {
 		s, t, done, err := l.s(l.r)
 		l.s = s
-		if err == io.EOF || done {
-			return t, nil
-		}
-		if err != nil {
-			return token{}, err
+		if err != nil || done {
+			return t, err
 		}
 	}
 }
