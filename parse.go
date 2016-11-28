@@ -9,6 +9,38 @@ import (
 	"unicode"
 )
 
+type posScanner struct {
+	r io.RuneScanner
+	Rune int
+	Line int
+	prev rune
+}
+
+func (ps *posScanner) ReadRune() (r rune, size int, err error) {
+	r, size, err = ps.r.ReadRune()
+	if err != nil {
+		return r, size, err
+	}
+	ps.prev = r
+	ps.Rune++
+	if r == '\n' {
+		ps.Line++
+	}
+	return r, size, err
+}
+
+func (ps *posScanner) UnreadRune() error {
+	err := ps.r.UnreadRune()
+	if err != nil {
+		return err
+	}
+	ps.Rune--
+	if ps.prev == '\n' {
+		ps.Line--
+	}
+	return nil
+}	
+
 type tokenType int8
 
 const (
@@ -24,15 +56,15 @@ type token struct {
 	Value string
 }
 
-type state func(io.RuneScanner) (state, token, bool, error)
+type state func(*posScanner) (state, token, bool, error)
 
 type lexer struct {
-	r io.RuneScanner
+	r *posScanner
 	s state
 }
 
 func NewLexer(r io.RuneScanner) *lexer {
-	return &lexer{r, lexStart}
+	return &lexer{&posScanner{r:r}, lexStart}
 }
 
 func (l *lexer) Next() (token, error) {
@@ -45,7 +77,7 @@ func (l *lexer) Next() (token, error) {
 	}
 }
 
-func lexStart(rs io.RuneScanner) (state, token, bool, error) {
+func lexStart(rs *posScanner) (state, token, bool, error) {
 	r, _, err := rs.ReadRune()
 	if err != nil {
 		return lexStart, token{}, false, err
@@ -67,7 +99,7 @@ func lexStart(rs io.RuneScanner) (state, token, bool, error) {
 	}
 }
 
-func lexParabreak(rs io.RuneScanner) (state, token, bool, error) {
+func lexParabreak(rs *posScanner) (state, token, bool, error) {
 	r, _, err := rs.ReadRune()
 	if err != nil {
 		return lexStart, token{}, false, err
@@ -84,7 +116,7 @@ func lexWord(r0 rune) state {
 	var buf bytes.Buffer
 	buf.WriteRune(r0)
 	var lw state
-	lw = func(rs io.RuneScanner) (state, token, bool, error) {
+	lw = func(rs *posScanner) (state, token, bool, error) {
 		r, _, err := rs.ReadRune()
 		if err != nil {
 			return lexStart, token{}, false, err
