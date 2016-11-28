@@ -56,15 +56,15 @@ type token struct {
 	Value string
 }
 
-type state func(*posScanner) (state, token, bool, error)
+type state func(io.RuneScanner) (state, token, bool, error)
 
 type lexer struct {
-	r *posScanner
+	r io.RuneScanner
 	s state
 }
 
 func NewLexer(r io.RuneScanner) *lexer {
-	return &lexer{&posScanner{r:r}, lexStart}
+	return &lexer{r, lexStart}
 }
 
 func (l *lexer) Next() (token, error) {
@@ -77,7 +77,7 @@ func (l *lexer) Next() (token, error) {
 	}
 }
 
-func lexStart(rs *posScanner) (state, token, bool, error) {
+func lexStart(rs io.RuneScanner) (state, token, bool, error) {
 	r, _, err := rs.ReadRune()
 	if err != nil {
 		return lexStart, token{}, false, err
@@ -99,7 +99,7 @@ func lexStart(rs *posScanner) (state, token, bool, error) {
 	}
 }
 
-func lexParabreak(rs *posScanner) (state, token, bool, error) {
+func lexParabreak(rs io.RuneScanner) (state, token, bool, error) {
 	r, _, err := rs.ReadRune()
 	if err != nil {
 		return lexStart, token{}, false, err
@@ -116,8 +116,11 @@ func lexWord(r0 rune) state {
 	var buf bytes.Buffer
 	buf.WriteRune(r0)
 	var lw state
-	lw = func(rs *posScanner) (state, token, bool, error) {
+	lw = func(rs io.RuneScanner) (state, token, bool, error) {
 		r, _, err := rs.ReadRune()
+		if err == io.EOF {
+			return lexStart, token{Type: tokenWord, Value: buf.String()}, true, nil
+		}
 		if err != nil {
 			return lexStart, token{}, false, err
 		}
@@ -131,4 +134,96 @@ func lexWord(r0 rune) state {
 		return lexStart, token{Type: tokenWord, Value: buf.String()}, true, nil
 	}
 	return lw
+}
+
+type node interface {
+	Emit(w io.Writer) error
+}
+
+type word string
+
+func (s word) Emit(w io.Writer) error {
+	return emitPsStrings(w, []string{string(s)})
+}
+
+type markup struct {
+	Cmd string
+	Args []string
+}
+
+func (m *markup) Emit(w io.Writer) error {
+	if m.Cmd == "parabreak" {
+		_, err := io.WriteString(w, "body_pad next_line\nbody_pad next_line\n")
+		return err
+	}
+
+	if m.Cmd == "title" {
+		_, err := io.WriteString(w, "head_pad next_line\n/Go-Bold head_size selectfont\n")
+		if err != nil {
+			return err
+		}
+		err = emitPsStrings(w, m.Args)
+		if err != nil {
+			return err
+		}
+		_, err = io.WriteString(w, "body_pad next_line\n/GoRegular body_size selectfont\n")
+		return err
+	}
+
+	return fmt.Errorf("Unrecognized command: %s", m.Cmd)
+}
+
+func emitPsStrings(w io.Writer, ss []string) error {
+	for _, s := range ss {
+		_, err := io.WriteString(w, "(" + s + " ) wshow\n")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func parse(name string, rs io.RuneScanner) ([]node, error) {
+	r := &posScanner{r:rs}
+	l := NewLexer(r)
+
+	var doc []node
+	var curmark *markup
+	for {
+		t, err := l.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("%s:%d:%d: %v", name, r.Line, r.Rune, err)
+		}
+
+		switch t.Type {
+		case tokenParabreak:
+			if curmark == nil {
+				doc = append(doc, &markup{Cmd:"parabreak"})
+			}
+		case tokenOpen:
+			if curmark != nil {
+				return nil, fmt.Errorf("%s:%d:%d: %v", name, r.Line, r.Rune, "Nested markup does not exist")
+			}
+			curmark = &markup{}
+		case tokenClose:
+			if curmark == nil {
+				return nil, fmt.Errorf("%s:%d:%d: %v", name, r.Line, r.Rune, "Unopened markup")
+			}
+			doc = append(doc, curmark)
+			curmark = nil
+		case tokenWord:
+			if curmark == nil {
+				doc = append(doc, word(t.Value))
+			} else if curmark.Cmd == "" {
+				curmark.Cmd = t.Value
+			} else {
+				curmark.Args = append(curmark.Args, t.Value)
+			}
+		}
+	}
+
+	return doc, nil
 }

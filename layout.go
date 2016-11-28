@@ -4,7 +4,6 @@ package main
 
 import (
 	"io"
-	"os"
 	"text/template"
 	//	"unicode/utf8"
 )
@@ -57,15 +56,6 @@ func (l *layout) Print(w io.Writer) error {
 	return t.Execute(w, l)
 }
 
-func main() {
-	l := NewLayout("GoRegular")
-
-	err := l.Print(os.Stdout)
-	if err != nil {
-		panic(err)
-	}
-}
-
 var layoutPreamble = `%!
 % Letter = 8.5 x 11 in² = 612 x 792 pt²
 /page_width {{.PageWidth}} def
@@ -86,6 +76,14 @@ var layoutPreamble = `%!
 % newline or padding
 /next_line { left_margin exch currentpoint exch pop exch sub moveto } bind def
 
+% init page
+/next_page { newpath left_margin top_margin moveto } bind def
+
+% wrap paragraphs to body bounds
+/wshow { dup stringwidth pop currentpoint pop add right_margin gt { body_pad next_line currentpoint exch pop bottom_margin lt { showpage next_page body_pad next_line show } { show } ifelse } { show } ifelse } bind def
+
 /{{.FontName}} body_size selectfont
+
+next_page
 
 `
