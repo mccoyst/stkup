@@ -140,12 +140,6 @@ type node interface {
 	Emit(w io.Writer) error
 }
 
-type word string
-
-func (s word) Emit(w io.Writer) error {
-	return emitPsStrings(w, []string{string(s)})
-}
-
 type para []string
 
 func (p para) Emit(w io.Writer) error {
@@ -177,25 +171,15 @@ func (m *markup) Emit(w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		err = emitPsStrings(w, m.Args)
+		err = para(m.Args).Emit(w)
 		if err != nil {
 			return err
 		}
-		_, err = io.WriteString(w, "body_pad next_line\nbody_font body_size selectfont\n")
+		_, err = io.WriteString(w, "body_font body_size selectfont\n")
 		return err
 	}
 
 	return fmt.Errorf("Unrecognized command: %s", m.Cmd)
-}
-
-func emitPsStrings(w io.Writer, ss []string) error {
-	for _, s := range ss {
-		_, err := io.WriteString(w, "(" + s + " ) wshow\n")
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func parse(name string, rs io.RuneScanner) ([]node, error) {
