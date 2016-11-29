@@ -1,19 +1,20 @@
 %!
 % Letter = 8.5 x 11 in² = 612 x 792 pt²
+/body_font /GoRegular def
 /page_width 612 def
 /page_height 792 def
 /top_margin 720 def
 /bottom_margin 72 def
-/left_margin 72 def
-/right_margin 540 def
+/left_margin 144 def
+/right_margin 468 def
 
-/body_size 12 def
-/head_size 13 def
+/body_size 10 def
+/head_size 11 def
 
-/line_space 15 def
+/line_space 12.5 def
 
-/body_pad 18 def
-/head_pad 39 def
+/body_pad 17.5 def
+/head_pad 33 def
 
 % newline or padding
 /next_line { left_margin exch currentpoint exch pop exch sub moveto } bind def
@@ -22,17 +23,17 @@
 /next_page { newpath left_margin top_margin moveto } bind def
 
 % wrap paragraphs to body bounds
-/wshow { dup stringwidth pop currentpoint pop add right_margin gt { body_pad next_line currentpoint exch pop bottom_margin lt { showpage next_page body_pad next_line show } { show } ifelse } { show } ifelse } bind def
+/wshow { dup stringwidth pop currentpoint pop add right_margin gt { line_space next_line currentpoint exch pop bottom_margin lt { showpage next_page line_space next_line show } { show } ifelse } { show } ifelse } bind def
 
-/GoRegular body_size selectfont
+body_font body_size selectfont
 
 next_page
 
 head_pad next_line
-/Go-Bold head_size selectfont
+body_font head_size selectfont
 (Hello! ) wshow
 body_pad next_line
-/GoRegular body_size selectfont
+body_font body_size selectfont
 (Lorem ) wshow
 (ipsum ) wshow
 (dolor ) wshow
@@ -127,7 +128,6 @@ body_pad next_line
 (quis ) wshow
 (eu ) wshow
 (turpis. ) wshow
-body_pad next_line
 body_pad next_line
 (Interdum ) wshow
 (et ) wshow
@@ -231,7 +231,6 @@ body_pad next_line
 (sit ) wshow
 (amet. ) wshow
 body_pad next_line
-body_pad next_line
 (Nam ) wshow
 (rutrum ) wshow
 (augue ) wshow
@@ -316,7 +315,6 @@ body_pad next_line
 (nulla ) wshow
 (pellentesque. ) wshow
 body_pad next_line
-body_pad next_line
 (Aliquam ) wshow
 (sed ) wshow
 (lectus ) wshow
@@ -390,7 +388,6 @@ body_pad next_line
 (nunc ) wshow
 (suscipit ) wshow
 (non. ) wshow
-body_pad next_line
 body_pad next_line
 (Integer ) wshow
 (nibh ) wshow
@@ -474,14 +471,13 @@ body_pad next_line
 (Suspendisse ) wshow
 (potenti. ) wshow
 body_pad next_line
-body_pad next_line
 head_pad next_line
-/Go-Bold head_size selectfont
+body_font head_size selectfont
 (And ) wshow
 (there's ) wshow
 (more! ) wshow
 body_pad next_line
-/GoRegular body_size selectfont
+body_font body_size selectfont
 (Proin ) wshow
 (ornare ) wshow
 (lobortis ) wshow
@@ -544,7 +540,6 @@ body_pad next_line
 (blandit ) wshow
 (elementum ) wshow
 (volutpat. ) wshow
-body_pad next_line
 body_pad next_line
 (Vivamus ) wshow
 (sem ) wshow
@@ -616,7 +611,6 @@ body_pad next_line
 (orci ) wshow
 (facilisis ) wshow
 (quis. ) wshow
-body_pad next_line
 body_pad next_line
 (In ) wshow
 (felis ) wshow
@@ -753,7 +747,6 @@ body_pad next_line
 (interdum ) wshow
 (nisi. ) wshow
 body_pad next_line
-body_pad next_line
 (Vestibulum ) wshow
 (sed ) wshow
 (fermentum ) wshow
@@ -801,7 +794,6 @@ body_pad next_line
 (et ) wshow
 (massa ) wshow
 (ex. ) wshow
-body_pad next_line
 body_pad next_line
 (Phasellus ) wshow
 (varius ) wshow

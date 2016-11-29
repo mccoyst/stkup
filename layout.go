@@ -25,11 +25,11 @@ func NewLayout(fontName string) *layout {
 	l.PageWidth = 612
 	l.PageHeight = 792
 	l.VerticalMargin = 72
-	l.HorizontalMargin = 72
-	l.BodySize = 12
-	l.BodyPad = l.BodySize * 1.5
+	l.HorizontalMargin = 144
+	l.BodySize = 10
+	l.BodyPad = l.BodySize * 1.75
 	l.LineSpace = l.BodySize * 1.25
-	l.HeadSize = 13
+	l.HeadSize = 11
 	l.HeadPad = l.HeadSize * 3
 
 	return l
@@ -58,6 +58,7 @@ func (l *layout) Print(w io.Writer) error {
 
 var layoutPreamble = `%!
 % Letter = 8.5 x 11 in² = 612 x 792 pt²
+/body_font /{{.FontName}} def
 /page_width {{.PageWidth}} def
 /page_height {{.PageHeight}} def
 /top_margin {{.TopMargin}} def
@@ -80,9 +81,9 @@ var layoutPreamble = `%!
 /next_page { newpath left_margin top_margin moveto } bind def
 
 % wrap paragraphs to body bounds
-/wshow { dup stringwidth pop currentpoint pop add right_margin gt { body_pad next_line currentpoint exch pop bottom_margin lt { showpage next_page body_pad next_line show } { show } ifelse } { show } ifelse } bind def
+/wshow { dup stringwidth pop currentpoint pop add right_margin gt { line_space next_line currentpoint exch pop bottom_margin lt { showpage next_page line_space next_line show } { show } ifelse } { show } ifelse } bind def
 
-/{{.FontName}} body_size selectfont
+body_font body_size selectfont
 
 next_page
 

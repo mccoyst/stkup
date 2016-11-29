@@ -153,12 +153,12 @@ type markup struct {
 
 func (m *markup) Emit(w io.Writer) error {
 	if m.Cmd == "parabreak" {
-		_, err := io.WriteString(w, "body_pad next_line\nbody_pad next_line\n")
+		_, err := io.WriteString(w, "body_pad next_line\n")
 		return err
 	}
 
 	if m.Cmd == "title" {
-		_, err := io.WriteString(w, "head_pad next_line\n/Go-Bold head_size selectfont\n")
+		_, err := io.WriteString(w, "head_pad next_line\nbody_font head_size selectfont\n")
 		if err != nil {
 			return err
 		}
@@ -166,7 +166,7 @@ func (m *markup) Emit(w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		_, err = io.WriteString(w, "body_pad next_line\n/GoRegular body_size selectfont\n")
+		_, err = io.WriteString(w, "body_pad next_line\nbody_font body_size selectfont\n")
 		return err
 	}
 
