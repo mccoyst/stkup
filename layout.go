@@ -83,6 +83,8 @@ var layoutPreamble = `%!
 % wrap paragraphs to body bounds
 /wshow { dup stringwidth pop currentpoint pop add right_margin gt { line_space next_line currentpoint exch pop bottom_margin lt { showpage next_page line_space next_line show } { show } ifelse } { show } ifelse } bind def
 
+/pwshow {  { wshow } forall body_pad next_line } bind def
+
 body_font body_size selectfont
 
 next_page

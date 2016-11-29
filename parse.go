@@ -146,17 +146,32 @@ func (s word) Emit(w io.Writer) error {
 	return emitPsStrings(w, []string{string(s)})
 }
 
+type para []string
+
+func (p para) Emit(w io.Writer) error {
+	_, err := io.WriteString(w, "[\n")
+	if err != nil {
+		return err
+	}
+	for _, s := range p {
+		_, err = io.WriteString(w, "(" + s + " )\n")
+		if err != nil {
+			return err
+		}
+	}
+	_, err = io.WriteString(w, "] pwshow\n")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type markup struct {
 	Cmd string
 	Args []string
 }
 
 func (m *markup) Emit(w io.Writer) error {
-	if m.Cmd == "parabreak" {
-		_, err := io.WriteString(w, "body_pad next_line\n")
-		return err
-	}
-
 	if m.Cmd == "title" {
 		_, err := io.WriteString(w, "head_pad next_line\nbody_font head_size selectfont\n")
 		if err != nil {
@@ -188,6 +203,7 @@ func parse(name string, rs io.RuneScanner) ([]node, error) {
 	l := NewLexer(r)
 
 	var doc []node
+	var curpara para
 	var curmark *markup
 	for {
 		t, err := l.Next()
@@ -200,8 +216,9 @@ func parse(name string, rs io.RuneScanner) ([]node, error) {
 
 		switch t.Type {
 		case tokenParabreak:
-			if curmark == nil {
-				doc = append(doc, &markup{Cmd:"parabreak"})
+			if curpara != nil {
+				doc = append(doc, curpara)
+				curpara = nil
 			}
 		case tokenOpen:
 			if curmark != nil {
@@ -215,8 +232,10 @@ func parse(name string, rs io.RuneScanner) ([]node, error) {
 			doc = append(doc, curmark)
 			curmark = nil
 		case tokenWord:
-			if curmark == nil {
-				doc = append(doc, word(t.Value))
+			if curpara != nil {
+				curpara = append(curpara, t.Value)
+			} else if curmark == nil {
+				curpara = para{t.Value}
 			} else if curmark.Cmd == "" {
 				curmark.Cmd = t.Value
 			} else {
